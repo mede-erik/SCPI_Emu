@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+"""Small launcher script for the SCPI emulator
+"""
+import sys
+import os
+import asyncio
+import argparse
+
+# Add src to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from scpiemu import server
+
+if __name__ == '__main__':
+    default_instrument = os.getenv("SCPI_INSTRUMENT", "PSU_Keysight_E36312A")
+    
+    p = argparse.ArgumentParser(description="SCPI emulator launcher")
+    p.add_argument("--host", default=server.DEFAULT_HOST, help=f"Host to bind (default: {server.DEFAULT_HOST})")
+    p.add_argument("--port", type=int, default=server.DEFAULT_PORT, help=f"Port to bind (default: {server.DEFAULT_PORT})")
+    p.add_argument("--instrument", default=default_instrument,
+                   help=f"Instrument ID from library (default: {default_instrument})")
+    p.add_argument("--list-instruments", action="store_true",
+                   help="List available instruments and exit")
+    args = p.parse_args()
+    
+    # Lista strumenti se richiesto
+    if args.list_instruments:
+        from scpiemu.instrument_loader import print_instruments_menu
+        print_instruments_menu()
+        sys.exit(0)
+    
+    # Inizializza simulatore
+    server.init_simulator(args.instrument)
+    
+    try:
+        asyncio.run(server.main(args.host, args.port))
+    except KeyboardInterrupt:
+        print("\nshutting down")
