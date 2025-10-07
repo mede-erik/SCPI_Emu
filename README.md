@@ -17,6 +17,7 @@ This project was developed **exclusively for testing purposes** of the [Open-Lab
 - **Automatic simulation** of real SCPI instruments
 - **14+ supported instruments**: Power Supplies (Keysight, TDK-Lambda, Rohde & Schwarz, OWON), Oscilloscopes (Rigol, Tektronix), Dataloggers, Electronic Loads
 - **Multi-channel state management** with simulated voltage/current values
+- **Built-in logging** of all received commands and responses
 - Extensible SCPI parser
 - Unit and integration tests
 
@@ -107,6 +108,39 @@ print(send_scpi('*IDN?'))  # SCPI_Emu,Model1,Serial0001,1.0
 ```zsh
 python3 test_client.py
 ```
+
+## Logging
+
+The server automatically prints all activity to the terminal with clear visual indicators:
+
+**Console output example:**
+
+```
+✅ Loaded instrument: Keysight E36312A
+🚀 SCPI emulator listening on ('127.0.0.1', 5025)
+📥 Connection from ('127.0.0.1', 54321)
+📨 Received: *IDN?
+📤 Response: Keysight Technologies,E36312A,SN001,1.0
+📨 Received: VOLT 5.0
+📤 Response: 
+📨 Received: MEAS:VOLT? CH1
+📤 Response: 5.0012
+📤 Connection closed ('127.0.0.1', 54321)
+```
+
+The output shows:
+- ✅ **Instrument loaded** - Confirms which instrument is being simulated
+- 🚀 **Server started** - Shows the listening address and port
+- 📥 **New connection** - Client IP and port when connecting
+- 📨 **Received command** - Every SCPI command received from clients
+- 📤 **Response sent** - The response returned to the client
+- 📤 **Connection closed** - When a client disconnects
+
+This real-time output helps with:
+- Debugging SCPI command sequences
+- Understanding client-server interactions
+- Monitoring instrument simulator behavior
+- Troubleshooting communication issues
 
 ## Supported Instruments
 

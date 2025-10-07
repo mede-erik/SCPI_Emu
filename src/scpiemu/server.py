@@ -24,9 +24,11 @@ def init_simulator(instrument_id: str):
     if instrument:
         _simulator = InstrumentSimulator(instrument)
         logging.info(f"Loaded instrument: {instrument.name}")
+        print(f"✅ Loaded instrument: {instrument.name}")
         return True
     else:
         logging.error(f"Instrument '{instrument_id}' not found in library")
+        print(f"❌ Error: Instrument '{instrument_id}' not found in library")
         return False
 
 
@@ -43,6 +45,7 @@ def handle_command(cmd: str) -> str:
 async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
     peer = writer.get_extra_info("peername")
     logging.info("Connection from %s", peer)
+    print(f"📥 Connection from {peer}")
     
     # Get simulator
     sim = get_simulator()
@@ -55,6 +58,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
                 break
             line = data.decode(errors="ignore").strip()
             logging.info("Received from %s: %s", peer, line)
+            print(f"📨 Received: {line}")
             
             # Use simulator if available, otherwise fallback to parser
             if use_simulator:
@@ -65,6 +69,10 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
                 resp = sim.process_command(cmd, params)
             else:
                 resp = parser.handle(line)
+            
+            # Log the response
+            logging.info("Response to %s: %s", peer, resp)
+            print(f"📤 Response: {resp}")
             
             # Ensure response ends with LF
             writer.write((resp + "\n").encode())
@@ -80,6 +88,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
         except Exception:
             pass
         logging.info("Closed connection %s", peer)
+        print(f"📤 Connection closed {peer}")
 
 
 async def main(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT) -> None:
@@ -87,6 +96,7 @@ async def main(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT) -> None:
     server = await asyncio.start_server(handle_client, host, port)
     addrs = ", ".join(str(s.getsockname()) for s in server.sockets)
     logging.info("SCPI emulator listening on %s", addrs)
+    print(f"🚀 SCPI emulator listening on {addrs}")
     async with server:
         await server.serve_forever()
 
