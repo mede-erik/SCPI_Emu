@@ -15,7 +15,7 @@ _instrument_id = None
 
 
 def init_simulator(instrument_id: str):
-    """Inizializza il simulatore con l'instrument ID specificato."""
+    """Initialize the simulator with the specified instrument ID."""
     global _simulator, _instrument_id
     _instrument_id = instrument_id
     
@@ -31,7 +31,7 @@ def init_simulator(instrument_id: str):
 
 
 def get_simulator():
-    """Ottiene l'istanza del simulatore."""
+    """Get the simulator instance."""
     return _simulator
 
 
@@ -44,7 +44,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
     peer = writer.get_extra_info("peername")
     logging.info("Connection from %s", peer)
     
-    # Ottieni simulatore
+    # Get simulator
     sim = get_simulator()
     use_simulator = sim is not None
     
@@ -56,9 +56,9 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
             line = data.decode(errors="ignore").strip()
             logging.info("Received from %s: %s", peer, line)
             
-            # Usa simulatore se disponibile, altrimenti fallback a parser
+            # Use simulator if available, otherwise fallback to parser
             if use_simulator:
-                # Separa comando e parametri
+                # Separate command and parameters
                 parts = line.split(None, 1)
                 cmd = parts[0] if parts else line
                 params = parts[1] if len(parts) > 1 else None
@@ -66,7 +66,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
             else:
                 resp = parser.handle(line)
             
-            # assicurarsi che la risposta termini con LF
+            # Ensure response ends with LF
             writer.write((resp + "\n").encode())
             await writer.drain()
             if line.upper() in ("SYST:EXIT", "EXIT", "SYSTEM:EXIT"):
@@ -105,14 +105,14 @@ if __name__ == "__main__":
                    help="List available instruments and exit")
     args = p.parse_args()
     
-    # Lista strumenti se richiesto
+    # List instruments if requested
     if args.list_instruments:
         from .instrument_loader import print_instruments_menu
         print_instruments_menu()
         import sys
         sys.exit(0)
     
-    # Inizializza simulatore con strumento scelto
+    # Initialize simulator with chosen instrument
     init_simulator(args.instrument)
     
     try:

@@ -1,84 +1,94 @@
 # SCPI_Emu
 
-Emulatore SCPI (Standard Commands for Programmable Instruments) con supporto per libreria di strumenti.
+SCPI (Standard Commands for Programmable Instruments) emulator with instrument library support.
 
-## Caratteristiche
+## ⚠️ Disclaimer
 
-- **Server TCP asincrono** basato su `asyncio`
-- **Libreria strumenti** da file JSON (`instruments_lib.json`)
-- **Simulazione automatica** di strumenti SCPI reali
-- **14+ strumenti supportati**: Power Supplies (Keysight, TDK-Lambda, Rohde & Schwarz, OWON), Oscilloscopi (Rigol, Tektronix), Datalogger, Electronic Loads
-- **Gestione stato multicanale** con valori di tensione/corrente simulati
-- Parser SCPI estendibile
-- Test unitari e di integrazione
+This project was developed **exclusively for testing purposes** of the [Open-Lab-Automation](https://github.com/mede-erik/Open-Lab-Automation) software. The emulator is designed to simulate SCPI instruments in a development and testing environment, **NOT for use in production applications or contexts that may involve risks to people or property**.
 
-## Installazione
+**The author assumes no responsibility** for direct, indirect, incidental, special, or consequential damages arising from the use or inability to use this software, including but not limited to damage to devices, data loss, business interruption, or any other commercial damage or loss.
 
-Clona il repository e installa le dipendenze (opzionale per pytest):
+**Development Note:** Most of the code in this project was generated with the assistance of GitHub Copilot, an AI-powered programming tool.
+
+## Features
+
+- **Asynchronous TCP server** based on `asyncio`
+- **Instrument library** from JSON file (`instruments_lib.json`)
+- **Automatic simulation** of real SCPI instruments
+- **14+ supported instruments**: Power Supplies (Keysight, TDK-Lambda, Rohde & Schwarz, OWON), Oscilloscopes (Rigol, Tektronix), Dataloggers, Electronic Loads
+- **Multi-channel state management** with simulated voltage/current values
+- Extensible SCPI parser
+- Unit and integration tests
+
+## Installation
+
+Clone the repository and install dependencies (optional for pytest):
 
 ```zsh
 git clone <repo-url>
 cd SCPI_Emu
-pip install -r requirements.txt  # opzionale, solo per pytest
+pip install -r requirements.txt  # optional, only for pytest
 ```
 
-## Utilizzo
+## Usage
 
-### Avviare il server
+### Starting the server
 
-**Metodo 1: Script launcher**
+### Starting the server
+
+**Method 1: Launcher script**
 
 ```zsh
 python3 bin/scpiemu
 ```
 
-**Metodo 2: Modulo Python**
+**Method 2: Python module**
 
 ```zsh
 python3 -m scpiemu.server
 ```
 
-**Metodo 3: Eseguibile diretto**
+**Method 3: Direct executable**
 
 ```zsh
 chmod +x bin/scpiemu
 ./bin/scpiemu
 ```
 
-### Opzioni
+### Options
 
 ```zsh
 python3 bin/scpiemu --help
 
-# Lista strumenti disponibili
+# List available instruments
 python3 bin/scpiemu --list-instruments
 
-# Simula Keysight E36312A (default)
+# Simulate Keysight E36312A (default)
 python3 bin/scpiemu --instrument PSU_Keysight_E36312A
 
-# Simula Rigol DS1054Z Oscilloscopio
+# Simulate Rigol DS1054Z Oscilloscope
 python3 bin/scpiemu --instrument OSC_Rigol_DS1054Z --port 5555
 
-# Simula TDK-Lambda GEN80-19 Power Supply
+# Simulate TDK-Lambda GEN80-19 Power Supply
 python3 bin/scpiemu --instrument PSU_TDK_GEN80_19
 
-# Usa variabili d'ambiente
+# Use environment variables
 SCPI_INSTRUMENT=PSU_OWON_ODP3033 python3 bin/scpiemu
 ```
 
-### Client di test
+### Test client
 
-**Con netcat:**
+**With netcat:**
 
 ```zsh
-# Invia singolo comando
+# Send single command
 printf "*IDN?\n" | nc 127.0.0.1 5025
 
-# Sessione interattiva
+# Interactive session
 nc 127.0.0.1 5025
 ```
 
-**Con Python:**
+**With Python:**
 
 ```python
 import socket
@@ -92,76 +102,82 @@ def send_scpi(cmd):
 print(send_scpi('*IDN?'))  # SCPI_Emu,Model1,Serial0001,1.0
 ```
 
-**Script client incluso:**
+**Included client script:**
 
 ```zsh
 python3 test_client.py
 ```
 
-## Strumenti Supportati
+## Supported Instruments
 
-L'emulatore include una libreria di **14+ strumenti reali** definiti in `instruments_lib.json`:
+The emulator includes a library of **14+ real instruments** defined in `instruments_lib.json`:
+
 
 ### Power Supplies
-- **Keysight E36300 Series**: E36312A (3 canali), E36311A (2 canali)
-- **TDK-Lambda GEN Series**: GEN80-19, GEN80-30, GEN100-15
-- **Rohde & Schwarz HPM Series**: HPM4040 (4 canali)
-- **OWON**: SPE6103, ODP3033 (3 canali)
 
-### Oscilloscopi
+- **Keysight E36300 Series**: E36312A (3 channels), E36311A (2 channels)
+- **TDK-Lambda GEN Series**: GEN80-19, GEN80-30, GEN100-15
+- **Rohde & Schwarz HPM Series**: HPM4040 (4 channels)
+- **OWON**: SPE6103, ODP3033 (3 channels)
+
+### Oscilloscopes
+
 - **Rigol DS1000Z Series**: DS1054Z (4ch, 50MHz), DS1104Z Plus (4ch, 100MHz)
 - **Tektronix MSO Series**: MSO54 (4ch, 500MHz), MSO58 (8ch, 1GHz)
 
 ### Dataloggers
+
 - **Keysight 34972A**: Data Acquisition Unit
 
 ### Electronic Loads
+
 - **Chroma 6330A**: DC Electronic Load Mainframe
 
-Per ogni strumento, il simulatore:
-- Gestisce lo stato dei canali (tensione, corrente, output on/off)
-- Risponde ai comandi IEEE 488.2 standard (*IDN?, *RST, *CLS, ecc.)
-- Supporta comandi specifici del modello (MEAS:VOLT?, CURR, OUTP, ecc.)
-- Simula valori di misura realistici con piccole variazioni
+For each instrument, the simulator:
 
-## Comandi SCPI Comuni
+- Manages channel state (voltage, current, output on/off)
+- Responds to IEEE 488.2 standard commands (*IDN?, *RST, *CLS, etc.)
+- Supports model-specific commands (MEAS:VOLT?, CURR, OUTP, etc.)
+- Simulates realistic measurement values with small variations
+
+## Common SCPI Commands
 
 ### IEEE 488.2 Standard
 
-| Comando | Descrizione | Risposta |
+| Command | Description | Response |
 |---------|-------------|----------|
-| `*IDN?` | Identificazione | `<Manufacturer>,<Model>,<Serial>,<Version>` |
-| `*RST` | Reset strumento | - |
+| `*IDN?` | Identification | `<Manufacturer>,<Model>,<Serial>,<Version>` |
+| `*RST` | Reset instrument | - |
 | `*CLS` | Clear status | - |
-| `SYST:ERR?` | Query errore | `0,No error` |
+| `SYST:ERR?` | Error query | `0,No error` |
 
-### Power Supply (esempio Keysight E36312A)
+### Power Supply (example Keysight E36312A)
 
-| Comando | Descrizione | Esempio |
+| Command | Description | Example |
 |---------|-------------|---------|
-| `VOLT 3.3` | Imposta tensione | - |
-| `CURR 1.5` | Imposta corrente | - |
-| `OUTP ON` | Abilita output | - |
-| `OUTP OFF` | Disabilita output | - |
-| `MEAS:VOLT? CH1` | Leggi tensione canale 1 | `3.3010` |
-| `MEAS:CURR? CH1` | Leggi corrente canale 1 | `1.4998` |
-| `MEAS:POW? CH1` | Leggi potenza canale 1 | `4.9507` |
-| `INST:SEL CH2` | Seleziona canale 2 | - |
+| `VOLT 3.3` | Set voltage | - |
+| `CURR 1.5` | Set current | - |
+| `OUTP ON` | Enable output | - |
+| `OUTP OFF` | Disable output | - |
+| `MEAS:VOLT? CH1` | Read voltage channel 1 | `3.3010` |
+| `MEAS:CURR? CH1` | Read current channel 1 | `1.4998` |
+| `MEAS:POW? CH1` | Read power channel 1 | `4.9507` |
+| `INST:SEL CH2` | Select channel 2 | - |
 
-## Comandi SCPI supportati
+## Supported SCPI Commands
 
-| Comando | Descrizione | Esempio risposta |
+| Command | Description | Example Response |
 |---------|-------------|------------------|
-| `*IDN?` | Identificazione strumento | `SCPI_Emu,Model1,Serial0001,1.0` |
-| `MEAS:VOLT?` | Misura tensione simulata | `3.1415` (valore casuale 0-5V) |
-| `SYST:ERR?` | Query errore sistema | `0,No error` |
-| `SYST:EXIT` | Chiude connessione | `Bye` |
+| `*IDN?` | Instrument identification | `SCPI_Emu,Model1,Serial0001,1.0` |
+| `MEAS:VOLT?` | Simulated voltage measurement | `3.1415` (random value 0-5V) |
+| `SYST:ERR?` | System error query | `0,No error` |
+| `SYST:EXIT` | Close connection | `Bye` |
 
-## Estendere i comandi
+## Extending Commands
 
-### Metodo 1: Aggiungi strumento alla libreria
+### Method 1: Add instrument to library
 
-Modifica `instruments_lib.json` per aggiungere un nuovo modello o serie:
+Edit `instruments_lib.json` to add a new model or series:
 
 ```json
 {
@@ -201,22 +217,22 @@ Modifica `instruments_lib.json` per aggiungere un nuovo modello o serie:
 }
 ```
 
-Poi avvia con:
+Then start with:
 
 ```zsh
 python3 bin/scpiemu --instrument PSU_MyCustom_Model1
 ```
 
-### Metodo 2: Aggiungi comandi al parser (legacy)
+### Method 2: Add commands to parser (legacy)
 
-Aggiungi nuovi comandi in `src/scpiemu/parser.py`:
+Add new commands in `src/scpiemu/parser.py`:
 
 ```python
 from scpiemu.parser import register
 
 @register("CONF:VOLT")
 def configure_voltage(params):
-    # params contiene gli argomenti dopo il comando
+    # params contains arguments after the command
     return "OK"
 
 @register("MEAS:CURR")
@@ -225,81 +241,90 @@ def measure_current(params):
     return f"{random.uniform(0, 1):.4f}"
 ```
 
-## Test
+## Tests
 
-**Esegui tutti i test:**
+**Run all tests:**
 
 ```zsh
-# Con pytest (se installato)
+# With pytest (if installed)
 pytest -v
 
-# Senza dipendenze esterne
+# Without external dependencies
 python3 scripts/run_tests.py
 ```
 
-**Esegui test di integrazione:**
+**Run integration tests:**
 
 ```zsh
 python3 tests/test_integration.py
 ```
 
-**Test singolo:**
+**Single test:**
 
 ```zsh
 python3 tests/test_parser.py
 ```
 
-## Struttura progetto
+## Project Structure
 
-```
+```text
 SCPI_Emu/
 ├── bin/
-│   └── scpiemu              # Script launcher
+│   └── scpiemu              # Launcher script
 ├── src/
 │   └── scpiemu/
 │       ├── __init__.py
-│       ├── server.py        # Server TCP asincrono
-│       └── parser.py        # Parser e registry comandi
+│       ├── server.py        # Async TCP server
+│       └── parser.py        # Parser and command registry
 ├── tests/
-│   ├── test_parser.py       # Test parser
-│   ├── test_command_handler.py  # Test handler
-│   └── test_integration.py # Test integrazione TCP
+│   ├── test_parser.py       # Parser tests
+│   ├── test_command_handler.py  # Handler tests
+│   └── test_integration.py # TCP integration tests
 ├── scripts/
-│   └── run_tests.py         # Runner test senza pytest
-├── test_client.py           # Client di esempio
+│   └── run_tests.py         # Test runner without pytest
+├── test_client.py           # Example client
 ├── requirements.txt
 └── README.md
 ```
 
 ## Troubleshooting
 
-**Porta già in uso:**
+**Port already in use:**
 
 ```zsh
-# Usa una porta diversa
+# Use a different port
 python3 bin/scpiemu --port 5026
 ```
 
 **ModuleNotFoundError:**
 
-I file includono già il path setup automatico. Se riscontri problemi:
+Files already include automatic path setup. If you encounter issues:
 
 ```zsh
-# Esporta PYTHONPATH manualmente
+# Export PYTHONPATH manually
 export PYTHONPATH="${PWD}/src:${PYTHONPATH}"
 python3 -m scpiemu.server
 ```
 
-**Errore di binding su 172.0.0.1:**
+**Binding error on 172.0.0.1:**
 
-Verifica variabili d'ambiente:
+Check environment variables:
 
 ```zsh
 unset SCPI_HOST
 python3 bin/scpiemu
 ```
 
-## Licenza
+## Project Information
 
-MIT License - vedi file LICENSE
+- **Purpose**: Testing for [Open-Lab-Automation](https://github.com/mede-erik/Open-Lab-Automation) software
+- **Recommended environment**: Development and testing only
+- **Development**: Code generated with GitHub Copilot assistance
+- **Author**: [@mede-erik](https://github.com/mede-erik)
+
+## License
+
+MIT License - see LICENSE file
+
+**DISCLAIMER**: This software is provided "as is", without warranty of any kind, express or implied. Use of this software is at your own risk.
 

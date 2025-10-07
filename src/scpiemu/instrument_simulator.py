@@ -1,7 +1,7 @@
 """Instrument state simulator with dynamic SCPI command generation.
 
-Simula lo stato interno di uno strumento SCPI e genera automaticamente
-risposte ai comandi basandosi sulla definizione JSON.
+Simulates the internal state of a SCPI instrument and automatically generates
+responses to commands based on the JSON definition.
 """
 import re
 import random
@@ -14,7 +14,7 @@ except ImportError:
 
 
 class ChannelState:
-    """Stato di un canale dello strumento."""
+    """State of an instrument channel."""
     
     def __init__(self, channel_id: str, voltage_range: tuple, current_range: tuple):
         self.channel_id = channel_id
@@ -25,25 +25,25 @@ class ChannelState:
         self.current_set = 0.0
         self.output_enabled = False
         
-        # Valori misurati (simulati con piccola variazione)
+        # Measured values (simulated with small variation)
         self.voltage_measured = 0.0
         self.current_measured = 0.0
     
     def set_voltage(self, value: float):
-        """Imposta tensione (clamped al range)."""
+        """Set voltage (clamped to range)."""
         self.voltage_set = max(self.voltage_range[0], min(value, self.voltage_range[1]))
         if self.output_enabled:
-            # Simula piccola variazione di misura
+            # Simulate small measurement variation
             self.voltage_measured = self.voltage_set + random.uniform(-0.01, 0.01)
     
     def set_current(self, value: float):
-        """Imposta corrente (clamped al range)."""
+        """Set current (clamped to range)."""
         self.current_set = max(self.current_range[0], min(value, self.current_range[1]))
         if self.output_enabled:
             self.current_measured = self.current_set + random.uniform(-0.001, 0.001)
     
     def enable_output(self, enabled: bool):
-        """Abilita/disabilita output."""
+        """Enable/disable output."""
         self.output_enabled = enabled
         if enabled:
             self.voltage_measured = self.voltage_set
@@ -54,7 +54,7 @@ class ChannelState:
 
 
 class InstrumentSimulator:
-    """Simula uno strumento SCPI completo."""
+    """Simulates a complete SCPI instrument."""
     
     def __init__(self, instrument_model: InstrumentModel):
         self.model = instrument_model
@@ -65,7 +65,7 @@ class InstrumentSimulator:
         self._init_channels()
     
     def _init_channels(self):
-        """Inizializza i canali dello strumento."""
+        """Initialize instrument channels."""
         for ch in self.model.get_channels():
             v_range = (0.0, 100.0)  # default
             i_range = (0.0, 10.0)   # default
@@ -77,90 +77,90 @@ class InstrumentSimulator:
             
             self.channels[ch.channel_id] = ChannelState(ch.channel_id, v_range, i_range)
         
-        # Seleziona il primo canale di default
+        # Select first channel as default
         if self.channels:
             self.selected_channel = list(self.channels.keys())[0]
     
     def get_channel(self, channel_id: Optional[str] = None) -> Optional[ChannelState]:
-        """Restituisce un canale (usa selected se non specificato)."""
+        """Returns a channel (uses selected if not specified)."""
         if channel_id is None:
             channel_id = self.selected_channel
         return self.channels.get(channel_id) if channel_id else None
     
     def process_command(self, raw_command: str, params: Optional[str] = None) -> str:
-        """Processa un comando SCPI e restituisce la risposta."""
-        # Cerca il comando nei comandi definiti
+        """Processes a SCPI command and returns the response."""
+        # Search for command in defined commands
         all_commands = self.model.get_all_commands()
         
         for cmd_name, cmd_template in all_commands.items():
-            # Controlla se il comando raw corrisponde al template
+            # Check if raw command matches the template
             response = self._match_and_execute(raw_command, params, cmd_name, cmd_template)
             if response is not None:
                 return response
         
-        # Debug: mostra comandi disponibili se non trovato
+        # Debug: show available commands if not found
         return f"ERR: Unknown command '{raw_command}'"
     
     def _match_and_execute(self, raw_cmd: str, params: Optional[str], 
                           cmd_name: str, cmd_template: str) -> Optional[str]:
-        """Verifica match e esegue il comando."""
-        # Normalizza comando e template
+        """Verify match and execute the command."""
+        # Normalize command and template
         cmd_upper = raw_cmd.upper().strip()
         template_upper = cmd_template.upper().strip()
         
-        # Rimuovi placeholder per confronto base
+        # Remove placeholders for base comparison
         template_base = re.sub(r'\{[^}]+\}', '', template_upper).strip()
         template_base = template_base.replace('  ', ' ')
         
-        # Estrai parte base del comando (senza numeri/valori)
+        # Extract base part of command (without numbers/values)
         cmd_base = re.sub(r'[\d.]+', '', cmd_upper).strip()
         cmd_base = cmd_base.replace('  ', ' ')
         
-        # Matching flessibile - controlla se template base appare nel comando
-        # O se il comando contiene la struttura del template
+        # Flexible matching - check if template base appears in command
+        # Or if command contains template structure
         if template_base.replace(' ', '') not in cmd_base.replace(' ', ''):
             return None
         
-        # Estrai parametri dai placeholder
+        # Extract parameters from placeholders
         cmd_params = self._extract_params(raw_cmd, cmd_template, params)
         
-        # Esegui azione basata sul nome del comando
+        # Execute action based on command name
         return self._execute_action(cmd_name, cmd_params)
     
     def _extract_params(self, raw_cmd: str, template: str, extra_params: Optional[str]) -> Dict[str, str]:
-        """Estrae i parametri dai placeholder del template."""
+        """Extracts parameters from template placeholders."""
         params = {}
         
-        # Trova placeholder nel template
+        # Find placeholders in template
         placeholder_pattern = r'\{([^}]+)\}'
         placeholders = re.findall(placeholder_pattern, template)
         
-        # Estrai tutti i valori numerici dal comando
+        # Extract all numeric values from command
         numbers = re.findall(r'[\d.]+', raw_cmd)
         
-        # Cerca pattern specifici
+        # Search for specific patterns
         # Channel number: CH1, CH2, OUT1, etc.
         ch_match = re.search(r'CH(\d+)|OUT(\d+)', raw_cmd, re.IGNORECASE)
         if ch_match:
             ch_num = ch_match.group(1) or ch_match.group(2)
             params['channel_number'] = ch_num
         
-        # Value parameter (da parametri extra o numeri nel comando)
+        # Value parameter (from extra params or numbers in command)
         if extra_params:
             val_match = re.search(r'([\d.]+)', extra_params)
             if val_match:
                 params['value'] = val_match.group(1)
             params['extra'] = extra_params
         elif numbers:
-            # Se non c'è channel_number, il primo numero è il value
+            # If there's no channel_number, the first number is the value
             if 'channel_number' not in params and numbers:
                 params['value'] = numbers[0]
         
         return params
     
     def _execute_action(self, cmd_name: str, params: Dict[str, str]) -> str:
-        """Esegue l'azione del comando e restituisce la risposta."""
-        # Comandi IEEE 488.2 comuni
+        """Executes the command action and returns the response."""
+        # Common IEEE 488.2 commands
         if cmd_name == 'identification_query':
             return f"{self.model.manufacturer},{self.model.model},SN001,1.0"
         
@@ -180,7 +180,7 @@ class InstrumentSimulator:
                 return self.error_queue.pop(0)
             return "0,No error"
         
-        # Gestione canali
+        # Channel management
         if cmd_name == 'select_channel':
             ch_num = params.get('channel_number', '1')
             ch_id = f"CH{ch_num}" if 'CH' not in str(ch_num) else str(ch_num)
@@ -188,7 +188,7 @@ class InstrumentSimulator:
                 self.selected_channel = ch_id
             return ""
         
-        # Comandi di set
+        # Set commands
         if cmd_name == 'set_voltage':
             value = float(params.get('value', params.get('extra', '0.0')))
             ch = self.get_channel()
@@ -203,7 +203,7 @@ class InstrumentSimulator:
                 ch.set_current(value)
             return ""
         
-        # Query comandi
+        # Query commands
         if cmd_name == 'read_voltage':
             ch_num = params.get('channel_number')
             if ch_num:
@@ -260,7 +260,7 @@ class InstrumentSimulator:
                 return "1" if ch.output_enabled else "0"
             return "0"
         
-        # Default: comando riconosciuto ma non implementato
+        # Default: command recognized but not implemented
         return "OK"
 
 
@@ -269,7 +269,7 @@ if __name__ == '__main__':
     import os
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
     
-    # Test con Keysight E36312A
+    # Test with Keysight E36312A
     lib = InstrumentLibrary()
     instrument = lib.get_instrument('PSU_Keysight_E36312A')
     
@@ -277,14 +277,14 @@ if __name__ == '__main__':
         sim = InstrumentSimulator(instrument)
         print(f"\n=== Testing {instrument.name} ===\n")
         
-        # Debug: mostra alcuni comandi caricati
+        # Debug: show some loaded commands
         all_cmds = instrument.get_all_commands()
-        print("Comandi caricati (sample):")
+        print("Loaded commands (sample):")
         for cmd_name, cmd_template in list(all_cmds.items())[:10]:
             print(f"  {cmd_name:30s} -> {cmd_template}")
         print()
         
-        # Test comandi
+        # Test commands
         test_commands = [
             ('*IDN?', None),
             ('VOLT', '3.3'),
@@ -301,3 +301,4 @@ if __name__ == '__main__':
             resp = sim.process_command(cmd, params)
             cmd_full = f"{cmd} {params}" if params else cmd
             print(f"{cmd_full:25s} -> {resp}")
+

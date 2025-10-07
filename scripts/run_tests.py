@@ -1,5 +1,5 @@
-"""Semplice runner di test senza dipendenze esterne.
-Esegue i test presenti in `tests/` che usano pytest-style asserts.
+"""Simple test runner without external dependencies.
+Executes tests in `tests/` that use pytest-style asserts.
 """
 import importlib.util
 import os

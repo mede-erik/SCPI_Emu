@@ -1,96 +1,96 @@
-# SCPI Emulator - Guida Rapida
+# SCPI Emulator - Quick Start Guide
 
-## Implementazione Completata ✅
+## Implementation Completed ✅
 
-Ho implementato con successo un **emulatore SCPI completo** con supporto per una libreria di strumenti reali caricati da JSON.
+Successfully implemented a **complete SCPI emulator** with support for a library of real instruments loaded from JSON.
 
-### Componenti Creati
+### Created Components
 
-1. **`src/scpiemu/instrument_loader.py`** - Loader della libreria strumenti
-   - Carica e parsifica `instruments_lib.json`
-   - API per accedere a categorie, serie e modelli
-   - Funzione `print_instruments_menu()` per visualizzare strumenti disponibili
+1. **`src/scpiemu/instrument_loader.py`** - Instrument library loader
+   - Loads and parses `instruments_lib.json`
+   - API to access categories, series and models
+   - `print_instruments_menu()` function to display available instruments
 
-2. **`src/scpiemu/instrument_simulator.py`** - Simulatore di stato strumento
-   - Gestisce stato multicanale (tensione, corrente, output on/off)
-   - Processa comandi SCPI con matching dinamico dei template
-   - Simula valori di misura realistici con variazioni casuali
-   - Supporta comandi IEEE 488.2 standard
+2. **`src/scpiemu/instrument_simulator.py`** - Instrument state simulator
+   - Manages multi-channel state (voltage, current, output on/off)
+   - Processes SCPI commands with dynamic template matching
+   - Simulates realistic measurement values with random variations
+   - Supports IEEE 488.2 standard commands
 
-3. **Server aggiornato** (`src/scpiemu/server.py`)
-   - Integra il simulatore strumenti
-   - Opzione `--instrument` per selezionare lo strumento
-   - Opzione `--list-instruments` per mostrare strumenti disponibili
-   - Fallback al parser legacy se strumento non trovato
+3. **Updated server** (`src/scpiemu/server.py`)
+   - Integrates instrument simulator
+   - `--instrument` option to select instrument
+   - `--list-instruments` option to show available instruments
+   - Fallback to legacy parser if instrument not found
 
-4. **Launcher aggiornato** (`bin/scpiemu`)
-   - Supporta tutte le nuove opzioni
-   - Help completo
+4. **Updated launcher** (`bin/scpiemu`)
+   - Supports all new options
+   - Complete help
 
-5. **Client di test migliorato** (`test_client.py`)
-   - Sequenza di test per power supply
-   - Output formattato in tabella
+5. **Improved test client** (`test_client.py`)
+   - Test sequence for power supply
+   - Table-formatted output
 
-### Strumenti Disponibili (14+)
+### Available Instruments (14+)
 
-#### Power Supplies (8 modelli)
-- Keysight E36312A (3 canali, 6V/25V)
-- Keysight E36311A (2 canali)
+#### Power Supplies (8 models)
+- Keysight E36312A (3 channels, 6V/25V)
+- Keysight E36311A (2 channels)
 - TDK-Lambda GEN80-19, GEN80-30, GEN100-15
-- Rohde & Schwarz HPM4040 (4 canali)
-- OWON SPE6103, ODP3033 (3 canali)
+- Rohde & Schwarz HPM4040 (4 channels)
+- OWON SPE6103, ODP3033 (3 channels)
 
-#### Oscilloscopi (4 modelli)
+#### Oscilloscopes (4 models)
 - Rigol DS1054Z (4ch, 50MHz)
 - Rigol DS1104Z Plus (4ch, 100MHz)
 - Tektronix MSO54 (4ch, 500MHz)
 - Tektronix MSO58 (8ch, 1GHz)
 
-#### Altri
+#### Others
 - Keysight 34972A Datalogger
 - Chroma 6330A Electronic Load
 
-### Utilizzo Base
+### Basic Usage
 
 ```bash
-# Mostra strumenti disponibili
+# Show available instruments
 python3 bin/scpiemu --list-instruments
 
-# Simula Keysight E36312A (default)
+# Simulate Keysight E36312A (default)
 python3 bin/scpiemu
 
-# Simula Rigol oscilloscopio
+# Simulate Rigol oscilloscope
 python3 bin/scpiemu --instrument OSC_Rigol_DS1054Z
 
-# Simula OWON power supply
+# Simulate OWON power supply
 python3 bin/scpiemu --instrument PSU_OWON_ODP3033 --port 5555
 ```
 
-### Test
+### Tests
 
 ```bash
-# In un terminale: avvia server
+# In one terminal: start server
 python3 bin/scpiemu --instrument PSU_Keysight_E36312A --port 5555
 
-# In altro terminale: esegui client di test
+# In another terminal: run test client
 python3 test_client.py 127.0.0.1 5555
 ```
 
-### Esempio Output
+### Example Output
 
 ```
 *IDN?                -> Keysight Technologies,E36312A,SN001,1.0
-VOLT 5.0             -> (imposta tensione a 5V)
-CURR 2.0             -> (imposta corrente a 2A)
-OUTP ON              -> (abilita output)
+VOLT 5.0             -> (sets voltage to 5V)
+CURR 2.0             -> (sets current to 2A)
+OUTP ON              -> (enables output)
 MEAS:VOLT? CH1       -> 5.0012
 MEAS:CURR? CH1       -> 1.9998
 MEAS:POW? CH1        -> 9.9987
 ```
 
-### Aggiungere Nuovi Strumenti
+### Adding New Instruments
 
-Modifica `instruments_lib.json` seguendo il formato esistente:
+Edit `instruments_lib.json` following the existing format:
 
 ```json
 {
@@ -115,43 +115,43 @@ Modifica `instruments_lib.json` seguendo il formato esistente:
 }
 ```
 
-### Stato Attuale
+### Current Status
 
-✅ **Completato**:
-- Loader libreria strumenti
-- Simulatore stato multicanale
-- Integrazione server con simulatore
-- CLI con opzioni strumento
-- Test e documentazione
+✅ **Completed**:
+- Instrument library loader
+- Multi-channel state simulator
+- Server integration with simulator
+- CLI with instrument options
+- Tests and documentation
 
-⚠️ **Note**:
-- Alcuni comandi richiedono miglioramento del matching (es. OUTP vs OUTP ON)
-- Il simulatore è funzionante per i comandi base
-- Valori simulati con variazioni casuali realistiche
+⚠️ **Notes**:
+- Some commands require improved matching (e.g., OUTP vs OUTP ON)
+- Simulator is functional for basic commands
+- Simulated values with realistic random variations
 
-### File Modificati/Creati
+### Modified/Created Files
 
-1. `src/scpiemu/instrument_loader.py` (NUOVO)
-2. `src/scpiemu/instrument_simulator.py` (NUOVO)  
-3. `src/scpiemu/server.py` (AGGIORNATO)
-4. `bin/scpiemu` (AGGIORNATO)
-5. `test_client.py` (AGGIORNATO)
-6. `README.md` (AGGIORNATO)
-7. Questa guida: `QUICK_START.md` (NUOVO)
+1. `src/scpiemu/instrument_loader.py` (NEW)
+2. `src/scpiemu/instrument_simulator.py` (NEW)  
+3. `src/scpiemu/server.py` (UPDATED)
+4. `bin/scpiemu` (UPDATED)
+5. `test_client.py` (UPDATED)
+6. `README.md` (UPDATED)
+7. This guide: `QUICK_START.md` (NEW)
 
-### Prossimi Passi Consigliati
+### Recommended Next Steps
 
-1. **Migliorare matching comandi** - Gestire meglio template con parametri
-2. **Aggiungere più comandi** - Espandere supporto per ogni strumento
-3. **Test automatici** - Creare test di integrazione per ogni strumento
-4. **Interfaccia Web** - Aggiungere UI per configurare e monitorare lo strumento
-5. **VISA-like API** - Wrapper Python compatibile con PyVISA
+1. **Improve command matching** - Better handle templates with parameters
+2. **Add more commands** - Expand support for each instrument
+3. **Automated tests** - Create integration tests for each instrument
+4. **Web Interface** - Add UI for configuring and monitoring instrument
+5. **VISA-like API** - Python wrapper compatible with PyVISA
 
-## Conclusione
+## Conclusion
 
-L'emulatore è ora completamente funzionale e può simulare **14+ strumenti reali** con gestione dello stato e comandi SCPI autentici. Perfetto per:
+The emulator is now fully functional and can simulate **14+ real instruments** with state management and authentic SCPI commands. Perfect for:
 
-- **Testing** di software di test automatici senza hardware reale
-- **Sviluppo** di driver e librerie SCPI
-- **Training** e dimostrazione di strumenti costosi
-- **CI/CD** con strumenti simulati
+- **Testing** automated test software without real hardware
+- **Development** of SCPI drivers and libraries
+- **Training** and demonstration of expensive instruments
+- **CI/CD** with simulated instruments

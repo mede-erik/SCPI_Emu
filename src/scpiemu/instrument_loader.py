@@ -1,7 +1,7 @@
 """Instrument library loader and management.
 
-Carica il file instruments_lib.json e fornisce API per accedere
-alle definizioni degli strumenti SCPI.
+Loads the instruments_lib.json file and provides API to access
+SCPI instrument definitions.
 """
 import json
 import os
@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Channel:
-    """Rappresenta un canale di uno strumento."""
+    """Represents an instrument channel."""
     channel_id: str
     label: str
     voltage_output: Optional[Dict[str, Any]] = None
@@ -20,7 +20,7 @@ class Channel:
 
 @dataclass
 class InstrumentModel:
-    """Rappresenta un modello di strumento."""
+    """Represents an instrument model."""
     id: str
     name: str
     manufacturer: str
@@ -30,14 +30,14 @@ class InstrumentModel:
     common_scpi_commands: Dict[str, str]
     
     def get_all_commands(self) -> Dict[str, str]:
-        """Unisce comandi comuni e specifici del modello."""
+        """Merges common and model-specific commands."""
         commands = {}
         commands.update(self.common_scpi_commands)
         commands.update(self.scpi_commands)
         return commands
     
     def get_channels(self) -> List[Channel]:
-        """Restituisce la lista dei canali dello strumento."""
+        """Returns the list of instrument channels."""
         channels = []
         if 'channels' in self.capabilities:
             for ch in self.capabilities['channels']:
@@ -51,12 +51,12 @@ class InstrumentModel:
 
 
 class InstrumentLibrary:
-    """Gestisce la libreria degli strumenti SCPI."""
+    """Manages the SCPI instrument library."""
     
     def __init__(self, library_path: Optional[str] = None):
-        """Inizializza e carica la libreria."""
+        """Initialize and load the library."""
         if library_path is None:
-            # Default: cerca instruments_lib.json nella root del progetto
+            # Default: search for instruments_lib.json in project root
             root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
             library_path = os.path.join(root, 'instruments_lib.json')
         
@@ -65,7 +65,7 @@ class InstrumentLibrary:
         self._load_library()
     
     def _load_library(self):
-        """Carica il file JSON della libreria."""
+        """Load the library JSON file."""
         try:
             with open(self.library_path, 'r', encoding='utf-8') as f:
                 self.data = json.load(f)
@@ -73,13 +73,13 @@ class InstrumentLibrary:
             raise RuntimeError(f"Failed to load instrument library: {e}")
     
     def list_categories(self) -> List[str]:
-        """Restituisce le categorie disponibili (power_supplies_series, oscilloscopes_series, ecc.)."""
+        """Returns available categories (power_supplies_series, oscilloscopes_series, etc.)."""
         if 'instrument_library' not in self.data:
             return []
         return list(self.data['instrument_library'].keys())
     
     def list_series(self, category: str) -> List[Dict[str, str]]:
-        """Restituisce le serie disponibili in una categoria."""
+        """Returns available series in a category."""
         series_list = []
         if 'instrument_library' not in self.data:
             return series_list
@@ -93,7 +93,7 @@ class InstrumentLibrary:
         return series_list
     
     def list_models(self, category: str, series_id: Optional[str] = None) -> List[Dict[str, str]]:
-        """Restituisce i modelli disponibili in una categoria/serie."""
+        """Returns available models in a category/series."""
         models_list = []
         if 'instrument_library' not in self.data:
             return models_list
@@ -114,11 +114,11 @@ class InstrumentLibrary:
         return models_list
     
     def get_instrument(self, instrument_id: str) -> Optional[InstrumentModel]:
-        """Restituisce un InstrumentModel dato il suo ID."""
+        """Returns an InstrumentModel given its ID."""
         if 'instrument_library' not in self.data:
             return None
         
-        # Cerca in tutte le categorie e serie
+        # Search in all categories and series
         for category_name, category_data in self.data['instrument_library'].items():
             for series in category_data:
                 common_commands = series.get('common_scpi_commands', {})
@@ -137,7 +137,7 @@ class InstrumentLibrary:
         return None
     
     def list_all_instruments(self) -> List[Dict[str, str]]:
-        """Restituisce tutti gli strumenti disponibili nella libreria."""
+        """Returns all available instruments in the library."""
         instruments = []
         for category in self.list_categories():
             instruments.extend(self.list_models(category))
@@ -145,14 +145,14 @@ class InstrumentLibrary:
 
 
 def print_instruments_menu():
-    """Stampa un menu interattivo degli strumenti disponibili."""
+    """Prints an interactive menu of available instruments."""
     lib = InstrumentLibrary()
     
     print("\n=== SCPI Instrument Library ===\n")
     
     categories = lib.list_categories()
     for cat in categories:
-        # Formatta il nome della categoria
+        # Format category name
         cat_name = cat.replace('_', ' ').title()
         print(f"\n📁 {cat_name}")
         
@@ -170,5 +170,5 @@ if __name__ == '__main__':
     # Add src to path for standalone execution
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
     
-    # Test: stampa menu strumenti
+    # Test: print instruments menu
     print_instruments_menu()
